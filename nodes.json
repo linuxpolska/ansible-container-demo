@@ -1,0 +1,16 @@
+{
+  "nodes": {
+    "docker.lab.example.com": {
+      "enabled": "true",
+      ":ip": "192.168.142.64",
+      ":memory": 1024,
+      ":box": "projectatomic/adb"
+    },
+    "openshift.lab.example.com": {
+      "enabled": "true",
+      ":ip": "192.168.142.128",
+      ":memory": 1024,
+      ":box": "projectatomic/adb"
+    }
+  }
+}
