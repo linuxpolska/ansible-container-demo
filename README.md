@@ -46,3 +46,4 @@ Replay this lab at home by following easy steps:
 
 - fix problems with `ansible-container build`
 - release new pdf slides
+- write lab replay Azure CLI related instructions
