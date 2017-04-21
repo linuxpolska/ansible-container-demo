@@ -1,0 +1,110 @@
+---
+- name: Set accounts
+  hosts: acs
+  vars:
+      uusername: "{{ ansible_ssh_user }}"
+  become: true
+  tasks:
+      - name: Set {{ uusername }} password
+        user:
+            name: "{{ uusername }}"
+            password: "{{ ansible_az_group | password_hash('sha512') }}"
+
+      - name: Allow login with passwords
+        lineinfile:
+            dest: /etc/ssh/sshd_config
+            regexp: '^PasswordAuthentication'
+            line: 'PasswordAuthentication yes'
+        tags: ansible
+
+      - name: Restart sshd
+        service:
+            name: sshd
+            state: restarted
+
+- name: Install Ansible on ACS Master Nodes
+  hosts: acs
+  become: true
+  vars:
+      ansible_packages: ansible
+      python_packages:
+          - python-pip
+          - python-dev
+          - build-essential
+  tasks:
+      - name: Install Ansible PPA key
+        apt_key:
+            id: 6125E2A8C77F2818FB7BD15B93C4A3FD7BB9C367
+            keyserver: keyserver.ubuntu.com
+            state: present
+        tags: ansible
+
+      - name: Install Ansible PPA
+        apt_repository:
+            repo: 'ppa:ansible/ansible'
+            state: present
+        tags: ansible
+
+      - name: Install Ansible packages
+        apt:
+            name: "{{ item }}"
+            state: present
+            update_cache: yes
+        with_items: "{{ ansible_packages }}"
+        tags: ansible
+
+      - name: Install PIP
+        apt:
+            name: "{{ item }}"
+        with_items: "{{ python_packages }}"
+        tags: ansible
+
+      - name: Get openshift-restclient-python
+        git:
+            repo: "https://github.com/openshift/openshift-restclient-python.git"
+            dest: /var/tmp/openshift-restclient-python
+        tags: ansible
+        ignore_errors: true
+
+      - name: Fix openshift-restclient-python version string
+        lineinfile:
+            dest: /var/tmp/openshift-restclient-python/setup.py
+            regexp: '^CLIENT_VERSION = '
+            line: 'CLIENT_VERSION = "1.0.0"'
+        tags: ansible
+
+      - name: Install openshift-restclient-python
+        pip:
+            name: /var/tmp/openshift-restclient-python
+        tags: ansible
+
+      - name: Get ansible-container
+        git:
+            repo: "https://github.com/ansible/ansible-container.git"
+            dest: /var/tmp/ansible-container
+            version: master
+        tags: ansible
+
+      - name: Install ansible-container
+        #pip:
+        #    name: /var/tmp/ansible-container[docker,k8s]
+        # BUG: pip breaks here, as it translates command to: /var/tmp/ansible-container[docker k8s]
+        command: pip install /var/tmp/ansible-container[docker,k8s]
+        tags: ansible
+
+- name: Install example repositories
+  hosts: acs
+  become: false
+  tasks:
+      - name: Install ansible-container-examples
+        git:
+            repo: "https://github.com/ansible/ansible-container-examples.git"
+            dest: examples
+        tags: examples
+
+      - name: Install ansible-container-demo
+        git:
+            repo: "https://github.com/linuxpolska/ansible-container-demo.git"
+            dest: slides
+        tags: examples
+
