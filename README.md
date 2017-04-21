@@ -8,10 +8,10 @@ from single management workstation. Participants will learn how
 to effectively use Ansible playbooks for reliable automation and
 compliance.
 
-Bring your own laptop with ''ssh client'' and ''web browser'' installed
-- this interactive workshop will employ ''Ansible'' to deploy ''Docker''
-cluster on ''Azure'' cloud to bootstrap test invironments in just few
-minutes!
+Just bring your own laptop with **ssh client** and **web browser**
+installed - this interactive workshop will employ **Ansible** to deploy
+**Docker** cluster on **Azure** cloud to bootstrap test invironments in
+just few minutes!
 
 ### Lab Replay
 
@@ -41,3 +41,8 @@ Replay this lab at home by following easy steps:
 ### References
 
 - http://alesnosek.com/blog/2016/09/12/first-impressions-about-ansible-container/
+
+## TODO
+
+- fix problems with `ansible-container build`
+- release new pdf slides
