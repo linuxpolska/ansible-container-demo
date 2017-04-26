@@ -44,7 +44,10 @@ Replay this lab at home by following easy steps:
 
 ## TODO
 
-- [] fix problems with `ansible-container build`
 - [] release new pdf slides
 - [] write lab replay Azure CLI related instructions
-- [] enable ssh on port 443 on lab machine to evade firewall at venue
+
+## BUGS
+
+- [] 0.9.0.0 has breaking changes, reverted to 0.3.0 [https://github.com/ansible/ansible-container/issues/448]
+

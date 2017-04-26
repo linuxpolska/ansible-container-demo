@@ -1,6 +1,6 @@
 ---
 - name: Set accounts
-  hosts: acs
+  hosts: ~containerservice-adalab
   vars:
       uusername: "{{ ansible_ssh_user }}"
   become: true
@@ -15,7 +15,31 @@
             dest: /etc/ssh/sshd_config
             regexp: '^PasswordAuthentication'
             line: 'PasswordAuthentication yes'
+        notify: Restart sshd
         tags: ansible
+
+      - name: Allow login on https port
+        lineinfile:
+            dest: /etc/ssh/sshd_config
+            regexp: "^(#\\s+|)Port "
+            insertafter: "^(#\\s+|)Port "
+            line: "Port 22\nPort 443"
+        notify: Restart sshd
+        tags: ansible
+
+      - name: Change port in kube-apiserver
+        lineinfile:
+            dest: /etc/kubernetes/manifests/kube-apiserver.yaml
+            regexp: '        - "--secure-port=443"'
+            line: '        - "--secure-port=8443"'
+        notify: Restart kubelet
+        tags: ansible
+
+  handlers:
+      - name: Restart kubelet
+        service:
+            name: kubelet
+            state: restarted
 
       - name: Restart sshd
         service:
@@ -23,7 +47,7 @@
             state: restarted
 
 - name: Install Ansible on ACS Master Nodes
-  hosts: acs
+  hosts: ~containerservice-adalab
   become: true
   vars:
       ansible_packages: ansible
@@ -53,18 +77,32 @@
         with_items: "{{ ansible_packages }}"
         tags: ansible
 
-      - name: Install PIP
-        apt:
-            name: "{{ item }}"
-        with_items: "{{ python_packages }}"
+- name: Install ansible-container
+  hosts: ~containerservice-adalab
+  become: true
+  vars:
+      bleeding_edge: False
+  tasks:
+      - name: Downloads get-pip.py
+        get_url:
+          url: https://bootstrap.pypa.io/get-pip.py
+          dest: /tmp/get-pip.py
+        tags: ansible
+
+      - name: Installs pip
+        command: python /tmp/get-pip.py creates=/bin/pip2
+        tags: ansible
+
+      - name: Upgrade setuptools
+        pip: name=setuptools state=latest
         tags: ansible
 
       - name: Get openshift-restclient-python
         git:
             repo: "https://github.com/openshift/openshift-restclient-python.git"
             dest: /var/tmp/openshift-restclient-python
+            force: yes
         tags: ansible
-        ignore_errors: true
 
       - name: Fix openshift-restclient-python version string
         lineinfile:
@@ -78,22 +116,24 @@
             name: /var/tmp/openshift-restclient-python
         tags: ansible
 
-      - name: Get ansible-container
-        git:
-            repo: "https://github.com/ansible/ansible-container.git"
-            dest: /var/tmp/ansible-container
-            version: master
+      - name: Installs ansible-container 0.9.0.0
+        pip: name=ansible-container
         tags: ansible
+        when: bleeding_edge
 
-      - name: Install ansible-container
-        #pip:
-        #    name: /var/tmp/ansible-container[docker,k8s]
-        # BUG: pip breaks here, as it translates command to: /var/tmp/ansible-container[docker k8s]
-        command: pip install /var/tmp/ansible-container[docker,k8s]
+      - name: Install ansible-container 0.9.0.0 kubernetes and docker support
+        # BUG: pip breaks here, as it translates command to: ansible-container[docker k8s]
+        command: pip install ansible-container[docker,k8s]
         tags: ansible
+        when: bleeding_edge
+
+      - name: Installs ansible-container 0.3.0
+        pip: name=ansible-container==0.3.0
+        tags: ansible
+        when: not bleeding_edge
 
 - name: Install example repositories
-  hosts: acs
+  hosts: ~containerservice-adalab
   become: false
   tasks:
       - name: Install ansible-container-examples

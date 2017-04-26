@@ -42,6 +42,6 @@ wait
 
 rm -f .template-azuredeploy.parameters.json
 
-ansible all -m ping
+ansible '~containerservice-adalab' -m ping
 ansible-playbook install.yaml
 
