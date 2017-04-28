@@ -44,10 +44,10 @@ Replay this lab at home by following easy steps:
 
 ## TODO
 
-- [] release new pdf slides
-- [] write lab replay Azure CLI related instructions
+- [ ] release new pdf slides
+- [ ] write lab replay Azure CLI related instructions
 
 ## BUGS
 
-- [] 0.9.0.0 has breaking changes, reverted to 0.3.0 [https://github.com/ansible/ansible-container/issues/448]
+- [x] 0.9.0.0 has breaking changes, reverted to 0.3.0 [https://github.com/ansible/ansible-container/issues/448]
 
