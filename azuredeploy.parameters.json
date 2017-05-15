@@ -6,7 +6,7 @@
       "value": "FIXME"
     },
     "agentCount": {
-      "value": 1
+      "value": 10
     },
     "agentVMSize": {
       "value": "Standard_DS1"
