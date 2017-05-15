@@ -21,6 +21,8 @@ Demo (in Polish):
 
 [![asciicast](https://asciinema.org/a/a14fkwwz9hfrych4z0sp045la.png)](https://asciinema.org/a/a14fkwwz9hfrych4z0sp045la)
 
+Hint: you can copy-and-paste from this Asciicast :)
+
 [![youtube](http://img.youtube.com/vi/hzjcpoNOL8w/0.jpg)](http://www.youtube.com/watch?v=hzjcpoNOL8w)
 
 ### Lab Replay
