@@ -17,7 +17,7 @@ just few minutes!
 
 Slides are available [here](https://bit.ly/adaslides).
 
-Demo:
+Demo (in Polish):
 
 [![asciicast](https://asciinema.org/a/a14fkwwz9hfrych4z0sp045la.png)](https://asciinema.org/a/a14fkwwz9hfrych4z0sp045la)
 
