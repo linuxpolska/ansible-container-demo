@@ -21,6 +21,8 @@ Demo (in Polish):
 
 [![asciicast](https://asciinema.org/a/a14fkwwz9hfrych4z0sp045la.png)](https://asciinema.org/a/a14fkwwz9hfrych4z0sp045la)
 
+[![youtube](http://img.youtube.com/vi/hzjcpoNOL8w/0.jpg)](http://www.youtube.com/watch?v=hzjcpoNOL8w)
+
 ### Lab Replay
 
 Replay this lab at home by following easy steps:
@@ -53,6 +55,8 @@ Replay this lab at home by following easy steps:
 ### References
 
 - http://alesnosek.com/blog/2016/09/12/first-impressions-about-ansible-container/
+- https://github.com/ansible/ansible-container-examples/tree/master/wordpress
+- https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
 
 ## BUGS
 
