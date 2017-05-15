@@ -50,7 +50,7 @@ Replay this lab at home by following easy steps:
    1. Notice how application and database images has been pulled from Docker Hub repository.
    1. Get instance information (Your instance ID will differ slightly): ```kubectl describe pod wordpress-...```
    1. Get services information: ```kubectl get service wordpress```
-   1. Connect to the external IP of your wordpress (either with ssh dynamic port forwarding or plain telnet)
+   1. Connect to the external IP of your wordpress (either with ssh dynamic port forwarding or plain ```curl -sL```)
 1. Once complete cleanup your lab environment: ```az group delete --name ... --yes```
 1. Try other examples by yourself, explore, research and... have fun!
 
