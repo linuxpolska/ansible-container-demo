@@ -6,9 +6,7 @@ log_file=".install.log.$(date +%Y%m%d%H%M%S)"
 exec &> >(tee -a "$log_file")
 
 lab=adalab
-#stations=50
-stations=3
-waitevery=$((stations/4))
+loc="westus"
 
 az account show | grep -q Enabled
 
@@ -16,27 +14,12 @@ az account show | grep -q Enabled
 mkdir .ssh && ssh-keygen -t rsa -q -f .ssh/az_acs -N ''
 cat azuredeploy.parameters.json | sed -e "s/SSHKEYHERE/$(cat .ssh/az_acs.pub|sed -e 's/\//\\\//g' -e 's/+/\\+/g')/" >.template-azuredeploy.parameters.json
 
-for i in $(seq -w 1 $stations) ; do
+echo "$(date +%Y%m%d%H%M%S) Deploying $lab in $loc"
 
-  i=$(printf "%02i" $i)
+cat .template-azuredeploy.parameters.json | sed -e "s/FIXME/$lab/" >.$lab-azuredeploy.parameters.json
 
-  loc="westus"
-  # do centralus i eastus nie mamy quoty (ticket id: 117042015627048 i 117042015627052)
-  #[ $i -ge $((stations/4)) ] && loc="centralus"
-  #[ $i -ge $((stations/4*2)) ] && loc="eastus"
-  #[ $i -ge $((stations/4*3)) ] && loc="eastus2"
-  [ $i -ge $((stations/2)) ] && loc="eastus2"
-
-  echo "$(date +%Y%m%d%H%M%S) [$i/$stations] Deploying $lab$i in $loc"
-
-  cat .template-azuredeploy.parameters.json | sed -e "s/FIXME/$lab$i/" >.$lab$i-azuredeploy.parameters.json
-
-  az group create -n $lab$i -l $loc
-  az group deployment create -g $lab$i --template-uri "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/101-acs-kubernetes/azuredeploy.json" --parameters @.$lab$i-azuredeploy.parameters.json && rm -f .$lab$i-azuredeploy.parameters.json &
-
-  (( i%waitevery==0 )) && echo "$(date +%Y%m%d%H%M%S) Waiting for $i jobs to finish ..." && wait
-
-done
+az group create -n $lab -l $loc
+az group deployment create -g $lab --template-uri "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/101-acs-kubernetes/azuredeploy.json" --parameters @.$lab-azuredeploy.parameters.json && rm -f .$lab-azuredeploy.parameters.json &
 
 wait
 

@@ -10,6 +10,33 @@
             name: "{{ uusername }}"
             password: "{{ ansible_az_group | password_hash('sha512') }}"
 
+      - name: Set {{ item }} password
+        user:
+            name: "{{ item }}"
+            password: "{{ item | password_hash('sha512') }}"
+            shell: "/bin/bash"
+            append: yes
+            groups: docker
+            update_password: on_create
+        with_sequence: start=0 end=50 format=adauser%02d
+
+      - name: Set {{ item }} kubectl
+        shell: "cp -fra /home/{{ uusername }}/.kube /home/{{ item }}/ && chown {{ item }}:{{ item }} /home/{{ item }}/.kube -R"
+        with_sequence: start=0 end=50 format=adauser%02d
+
+      - name: Set {{ item }} namespace
+        shell: "kubectl config set-context $(kubectl config current-context) --namespace={{ item }} && kubectl create namespace {{ item }}"
+        become_user: "{{ item }}"
+        ignore_errors: yes
+        with_sequence: start=0 end=50 format=adauser%02d
+
+#      - name: Set {{ item }} project alias
+#        lineinfile:
+#            dest: "/home/{{ item }}/.bash_aliases"
+#            line: "export COMPOSE_PROJECT_NAME=$USER"
+#        become_user: "{{ item }}"
+#        with_sequence: start=0 end=50 format=adauser%02d
+
       - name: Allow login with passwords
         lineinfile:
             dest: /etc/ssh/sshd_config
@@ -18,22 +45,22 @@
         notify: Restart sshd
         tags: ansible
 
-      - name: Allow login on https port
-        lineinfile:
-            dest: /etc/ssh/sshd_config
-            regexp: "^(#\\s+|)Port "
-            insertafter: "^(#\\s+|)Port "
-            line: "Port 22\nPort 443"
-        notify: Restart sshd
-        tags: ansible
-
-      - name: Change port in kube-apiserver
-        lineinfile:
-            dest: /etc/kubernetes/manifests/kube-apiserver.yaml
-            regexp: '        - "--secure-port=443"'
-            line: '        - "--secure-port=8443"'
-        notify: Restart kubelet
-        tags: ansible
+#      - name: Allow login on https port
+#        lineinfile:
+#            dest: /etc/ssh/sshd_config
+#            regexp: "^(#\\s+|)Port "
+#            insertafter: "^(#\\s+|)Port "
+#            line: "Port 22\nPort 443"
+#        notify: Restart sshd
+#        tags: ansible
+#
+#      - name: Change port in kube-apiserver
+#        lineinfile:
+#            dest: /etc/kubernetes/manifests/kube-apiserver.yaml
+#            regexp: '        - "--secure-port=443"'
+#            line: '        - "--secure-port=8443"'
+#        notify: Restart kubelet
+#        tags: ansible
 
   handlers:
       - name: Restart kubelet
@@ -132,6 +159,40 @@
         tags: ansible
         when: not bleeding_edge
 
+      - name: Install ansible-container wrapper
+        blockinfile:
+            dest: /usr/local/sbin/ansible-container
+            owner: root
+            group: root
+            mode: 0755
+            create: yes
+            block: |
+                #!/bin/bash
+                
+                while true ; do
+                  if [ -f /tmp/aclock ] ; then
+                    [ -z "$prog" ] && echo -n "Waiting for other instance ($(stat -c %U /tmp/aclock)) to finish build " && prog=1
+                    [ ! -z "$prog" ] && echo -n "." && sleep 5
+                  else
+                    prog=''
+                    echo -n "Getting ready to launch "
+                    for i in $(seq 0 $((RANDOM%30))) ; do
+                      echo -n "." && sleep 1
+                    done
+                    if [ ! -f /tmp/aclock ] ; then
+                      touch /tmp/aclock
+                      echo "We've got a lock!"
+                      break
+                    fi
+                  fi
+                done
+                
+                /usr/local/bin/ansible-container $*
+                
+                rm -f /tmp/aclock
+        tags: ansible
+        when: not bleeding_edge
+
 - name: Install example repositories
   hosts: ~containerservice-adalab
   become: false
@@ -147,4 +208,20 @@
             repo: "https://github.com/linuxpolska/ansible-container-demo.git"
             dest: slides
         tags: examples
+
+- name: Install example repositories for all lab users
+  hosts: ~containerservice-adalab
+  vars:
+      uusername: "{{ ansible_ssh_user }}"
+  become: true
+  tasks:
+      - name: Install ansible-container-examples for {{ item }}
+        shell: "cp -fra /home/{{ uusername }}/examples /home/{{ item }}/ && chown {{ item }}:{{ item }} /home/{{ item }}/examples -R"
+        tags: examples
+        with_sequence: start=0 end=50 format=adauser%02d
+
+      - name: Install ansible-container-demo for {{ item }}
+        shell: "cp -fra /home/{{ uusername }}/slides /home/{{ item }}/ && chown {{ item }}:{{ item }} /home/{{ item }}/slides -R"
+        tags: examples
+        with_sequence: start=0 end=50 format=adauser%02d
 
